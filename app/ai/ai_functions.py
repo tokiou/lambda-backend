@@ -4,7 +4,7 @@ import openai
 from fastapi import HTTPException
 import os
 
-load_dotenv("/home/tokiou/lambda/lambda-backend/.lambda_env")
+load_dotenv("/lambda-backend/.lambda_env")
 openai.api_type = os.getenv('OPENAI-API-TYPE')
 openai.api_base = os.getenv('OPENAI-API-BASE')
 openai.api_key = os.getenv('OPENAI-API-KEY')
