@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from routers import ai_router
+from logs.handle_logger import logger
 
 
 def include_router(app):
@@ -12,4 +13,5 @@ def init_app():
     return app
 
 
+logger.info('Initializing app...')
 app = init_app()
