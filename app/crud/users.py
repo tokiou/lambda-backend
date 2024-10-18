@@ -13,9 +13,9 @@ async def save_entity(db, entity) -> None:
         await db.commit()
         await db.refresh(entity)
     except SQLAlchemyError as sqlex:
-        raise sqlex
+        raise HTTPException(status_code=400, detail=str(sqlex))
     except Exception as ex:
-        raise ex
+        raise HTTPException(status_code=400, detail=str(ex))
 
 
 async def user_registration(
@@ -40,9 +40,9 @@ async def user_registration(
         await save_entity(db, user)
         logger.info(f'{email} Registered.')
     except SQLAlchemyError as sqlex:
-        raise HTTPException(status_code=400, detail="User already exists")
+        raise HTTPException(status_code=400, detail=str(sqlex))
     except Exception as ex:
-        raise HTTPException(status_code=400, detail="User already exists")
+        raise HTTPException(status_code=400, detail=str(ex))
 
 
 async def check_user_exists(db, email: str, username: str) -> bool:
@@ -52,14 +52,8 @@ async def check_user_exists(db, email: str, username: str) -> bool:
     return user is not None
 
 
-async def verify_user_password(db, email: str, password: str) -> bool:
-    # Get user
-    query = select(User).where(User.email == email)
+async def get_user_by_email(db, email: str):
+    query = select(User).filter(User.email == email)
     result = await db.execute(query)
     user = result.scalars().first()
-
-    if user is None:
-        # User not exists
-        return False
-
-    return bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8'))
+    return user
