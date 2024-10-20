@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from typing import List, Dict
 from ai.ai_functions import generate_creative_projects
 
+
 ai_router = APIRouter(prefix="/lambda")
 
 

@@ -52,8 +52,8 @@ async def check_user_exists(db, email: str, username: str) -> bool:
     return user is not None
 
 
-async def get_user_by_email(db, email: str):
-    query = select(User).filter(User.email == email)
+async def get_user_by_username(db, username: str):
+    query = select(User).filter(User.username == username)
     result = await db.execute(query)
     user = result.scalars().first()
     return user
