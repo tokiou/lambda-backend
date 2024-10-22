@@ -6,8 +6,7 @@ from app.models.users_models import Base
 from alembic import context
 import os
 from dotenv import load_dotenv
-dotenv_path = os.path.join(os.path.dirname((os.path.dirname(__file__))),
-                           '.lambda_env')
+dotenv_path = '.lambda_env'
 # flake8: noqa
 
 # Cargar las variables de entorno desde el archivo .
