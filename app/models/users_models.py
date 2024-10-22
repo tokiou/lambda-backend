@@ -43,3 +43,20 @@ class UserQuota(Base):
     quota = Column(Integer, default=100)
     last_quota_charge = Column(DateTime, default=datetime.utcnow)
     user = relationship("User", back_populates="user_quotas")
+
+
+class Invitation(Base):
+    __tablename__ = 'invitations'
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4, index=True)
+    sender_id = Column(GUID(), ForeignKey('users.id'), nullable=False)
+    recipient_id = Column(GUID(), ForeignKey('users.id'), nullable=False)
+    team_id = Column(GUID(), ForeignKey('teams.id'), nullable=False)
+    status = Column(String, nullable=False, default='pending')  # 'pending', 'accepted', 'rejected'
+    sent_at = Column(DateTime, default=datetime.utcnow)
+    accepted_at = Column(DateTime, nullable=True)
+    rejected_at = Column(DateTime, nullable=True)
+
+    sender = relationship("User", foreign_keys=[sender_id])
+    recipient = relationship("User", foreign_keys=[recipient_id])
+    team = relationship("Team")
