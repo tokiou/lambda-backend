@@ -20,7 +20,7 @@ load_dotenv(dotenv_path)
 TOKEN_SECRET_KEY = os.getenv('TOKEN_SECRET_KEY')
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 class TokenData:
     def __init__(self, username: str):
@@ -36,6 +36,34 @@ async def create_access_token(data: dict, expires_delta: Optional[timedelta] = N
     to_encode.update({"exp": expire})
     encoded_jwt = encode(to_encode, TOKEN_SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+async def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire})
+    encoded_jwt = encode(to_encode, TOKEN_SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+async def create_new_access_token(refresh_token):
+    try:
+        # Decodificar el refresh token
+        payload = jwt.decode(refresh_token, TOKEN_SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        
+        # Generar un nuevo access token
+        new_access_token = await create_access_token({"sub": username})
+        
+        return new_access_token
+    
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Refresh token has expired")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 
 class JWTBearer(HTTPBearer):
