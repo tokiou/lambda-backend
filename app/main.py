@@ -1,10 +1,11 @@
 from fastapi import FastAPI
-from routers import ai_router, users_router
+from routers import ai_router, users_router, content_router
 from logs.handle_logger import logger
 
 def include_router(app) -> None:
     app.include_router(ai_router.ai_router)
     app.include_router(users_router.user_router)
+    app.include_router(content_router.content_router)
 
 
 def init_app() -> FastAPI:

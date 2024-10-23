@@ -3,7 +3,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 from sqlalchemy.future import select
 from logs.handle_logger import logger
-import bcrypt
+from models.teams_models import Team
+from models.users_models import UserTeamRole
 # flake8: noqa
 
 
@@ -24,7 +25,7 @@ async def user_registration(
         email: str,
         password_hash: str,
         first_name: str,
-        last_name: str) -> None:
+        last_name: str) -> str:
 
     try:
         role = "user"
@@ -38,7 +39,7 @@ async def user_registration(
         )
 
         await save_entity(db, user)
-        logger.info(f'{email} Registered.')
+        return str(user.id)
     except SQLAlchemyError as sqlex:
         raise HTTPException(status_code=400, detail=str(sqlex))
     except Exception as ex:
@@ -57,3 +58,39 @@ async def get_user_by_username(db, username: str):
     result = await db.execute(query)
     user = result.scalars().first()
     return user
+
+
+async def create_team(
+        db,
+        user_id: str,
+) -> str:
+    try:
+        team = Team(
+            name="Individual_" + user_id
+        )
+
+        await save_entity(db, team)
+        return team.id
+    except SQLAlchemyError as sqlex:
+        raise HTTPException(status_code=400, detail=str(sqlex))
+    except Exception as ex:
+        raise HTTPException(status_code=400, detail=str(ex))
+
+
+async def assing_team(
+        db,
+        user_id: str,
+        team_id: str,
+) -> None:
+    try:
+        userteamrole = UserTeamRole(
+            user_id=user_id,
+            team_id=team_id,
+            role="owner"
+        )
+
+        await save_entity(db, userteamrole)
+    except SQLAlchemyError as sqlex:
+        raise HTTPException(status_code=400, detail=str(sqlex))
+    except Exception as ex:
+        raise HTTPException(status_code=400, detail=str(ex))
