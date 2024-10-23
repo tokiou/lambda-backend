@@ -41,11 +41,11 @@ async def login_for_acesss_token(
     db_user = await get_user_by_username(db, user.username)
 
     # Verify client password with db password
-    if not user or not await verify_password(user.password, db_user.password_hash):
+    if not db_user or not await verify_password(user.password, db_user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    access_token = await create_access_token(data={"sub": user.username}, expires_delta=timedelta(minutes=30))
-    refresh_token = await create_refresh_token(data={"sub": user.username})
+    access_token = await create_access_token(data={"sub": str(db_user.id)}, expires_delta=timedelta(minutes=30))
+    refresh_token = await create_refresh_token(data={"sub": str(db_user.id)})
 
     return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
 

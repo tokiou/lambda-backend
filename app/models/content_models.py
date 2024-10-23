@@ -1,10 +1,10 @@
-from app.models.base import Base
+from models.base import Base
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID as GUID
 import uuid
 from datetime import datetime
-from app.models.teams_models import Team
+from models.teams_models import Team
 
 
 class Idea(Base):

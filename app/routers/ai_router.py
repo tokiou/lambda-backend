@@ -12,6 +12,7 @@ class Ideas(BaseModel):
 
 
 @ai_router.post("/brainstorming", dependencies=[Depends(JWTBearer())])
-async def brainstroming_projects(ideas: Ideas) -> Dict[str, str]:
+async def brainstroming_projects(ideas: Ideas, user_id: str = Depends(JWTBearer())) -> Dict[str, str]:
+    print(user_id)
     creative_project = await generate_creative_projects(ideas.ideas)
     return {"possible_project": creative_project}

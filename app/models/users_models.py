@@ -4,9 +4,9 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import UUID as GUID
 import uuid
-from app.models.teams_models import Team
-from app.models.content_models import NoteColumns, Note, Idea, Project
-from app.models.base import Base
+from models.teams_models import Team
+from models.content_models import NoteColumns, Note, Idea, Project
+from models.base import Base
 
 
 class User(Base):
@@ -43,7 +43,6 @@ class UserQuota(Base):
     quota = Column(Integer, default=100)
     last_quota_charge = Column(DateTime, default=datetime.utcnow)
     user = relationship("User", back_populates="user_quotas")
-
 
 class Invitation(Base):
     __tablename__ = 'invitations'

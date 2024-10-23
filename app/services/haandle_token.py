@@ -53,10 +53,10 @@ async def create_new_access_token(refresh_token):
     try:
         # Decodificar el refresh token
         payload = jwt.decode(refresh_token, TOKEN_SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
+        user_id = payload.get("sub")
         
         # Generar un nuevo access token
-        new_access_token = await create_access_token({"sub": username})
+        new_access_token = await create_access_token({"sub": user_id})
         
         return new_access_token
     
@@ -75,25 +75,28 @@ class JWTBearer(HTTPBearer):
         if credentials:
             if not credentials.scheme == "Bearer":
                 raise HTTPException(status_code=403, detail="Invalid authentication scheme.")
-            if not self.verify_jwt(credentials.credentials):
+
+            user_id = self.verify_jwt(credentials.credentials)
+            if not user_id:
                 raise HTTPException(status_code=403, detail="Invalid token or expired token.")
-            return credentials.credentials
+            return user_id
         else:
             raise HTTPException(status_code=403, detail="Invalid authorization code.")
 
-    def verify_jwt(self, jwtoken: str) -> bool:
-        try:
-            credentials_exception = HTTPException(
+    def verify_jwt(self, jwtoken: str) -> str:
+        credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+        try:
             payload = jwt.decode(jwtoken, TOKEN_SECRET_KEY, algorithms=[ALGORITHM])
-            username: str = payload.get("sub")
-            if username is None:
+            user_id: str = payload.get("sub")
+            if user_id is None:
                 raise credentials_exception
-            return True
+            return user_id  # Devolvemos el user_id si el token es válido
         except InvalidTokenError:
             raise credentials_exception
+
             
             

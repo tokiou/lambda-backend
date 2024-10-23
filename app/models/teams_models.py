@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.dialects.postgresql import UUID as GUID
 from sqlalchemy.orm import relationship
 import uuid
-from app.models.base import Base
+from models.base import Base
 from datetime import datetime
 
 
