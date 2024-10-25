@@ -1,23 +1,14 @@
-from fastapi import APIRouter, Depends, Request
-from typing import List, Dict
-from crud.content import upload_idea, get_user_teams, get_teams_name, get_team_ideas, delete_team_idea
+from fastapi import APIRouter, Depends
+from typing import Dict
+from crud.content import upload_idea, get_user_teams, get_teams_name, get_team_ideas, delete_team_idea, update_team_idea
 from services.haandle_token import JWTBearer
-from pydantic import BaseModel
 from uuid import UUID
-from typing import Optional, Union
-from models.users_models import UserTeamRole
+from schemas.content_schemas import Ideas, UpdateIdea
 from sqlalchemy.ext.asyncio import AsyncSession
 from crud.db import get_session
 
 
 content_router = APIRouter(prefix="/lambda")
-
-class Ideas(BaseModel):
-    idea: str
-    title: str
-    project_id: Optional[str] = None
-    priority: int
-    team_id: str
 
 
 @content_router.post("/idea", dependencies=[Depends(JWTBearer())])
@@ -41,8 +32,8 @@ async def create_idea(
 
 
 @content_router.get("/idea", dependencies=[Depends(JWTBearer())])
-async def get_ideas(team_id: str, db: AsyncSession = Depends(get_session)) -> Dict:
-    results = await get_team_ideas(db, team_id)
+async def get_ideas(team_id: str, user_id: str = Depends(JWTBearer()), db: AsyncSession = Depends(get_session)) -> Dict:
+    results = await get_team_ideas(db, team_id, user_id)
     ideas_response = [
         {
             "id": result.id,
@@ -56,25 +47,30 @@ async def get_ideas(team_id: str, db: AsyncSession = Depends(get_session)) -> Di
 
 
 @content_router.delete("/idea/{idea_id}", dependencies=[Depends(JWTBearer)])
-async def delete_idea(idea_id: str, db: AsyncSession = Depends(get_session)) -> Dict:
-    await delete_team_idea(db, idea_id)
+async def delete_idea(idea_id: str, user_id: str = Depends(JWTBearer()), db: AsyncSession = Depends(get_session)) -> Dict:
+    await delete_team_idea(db, idea_id, user_id)
     return {"message": "Idea deleted!"}
+
+
+@content_router.patch("/idea/{idea_id}", dependencies=[Depends(JWTBearer)])
+async def update_idea(idea_id: str, idea: UpdateIdea, user_id: str = Depends(JWTBearer()), db: AsyncSession = Depends(get_session)) -> Dict:
+    await update_team_idea(db, idea_id, idea, user_id)
+    return {"message": "Idea updated successfully"}
 
 
 @content_router.get("/teams", dependencies=[Depends(JWTBearer())])
 async def create_idea(
     user_id: str = Depends(JWTBearer()),
     db: AsyncSession = Depends(get_session)) -> Dict:
+
     user_teams = await get_user_teams(db, user_id)
     teams = []
     
-    for team in user_teams:
-        team_id = team.team_id
+    for team_id in user_teams:
         team_name = await get_teams_name(db, team_id)
         teams.append({
             "team_id": team_id,
             "team_name": team_name
         })
-    
     
     return {"teams": teams}
