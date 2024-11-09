@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
 from typing import Dict
-from crud.content import upload_idea, get_user_teams, get_teams_name, get_team_ideas, delete_team_idea, update_team_idea
+from crud.content import upload_idea, get_team_ideas, delete_team_idea, update_team_idea
 from services.haandle_token import JWTBearer
 from uuid import UUID
 from schemas.content_schemas import Ideas, UpdateIdea
 from sqlalchemy.ext.asyncio import AsyncSession
 from crud.db import get_session
-
+# flake8: noqa
 
 content_router = APIRouter(prefix="/lambda")
 
@@ -58,19 +58,4 @@ async def update_idea(idea_id: str, idea: UpdateIdea, user_id: str = Depends(JWT
     return {"message": "Idea updated successfully"}
 
 
-@content_router.get("/teams", dependencies=[Depends(JWTBearer())])
-async def create_idea(
-    user_id: str = Depends(JWTBearer()),
-    db: AsyncSession = Depends(get_session)) -> Dict:
 
-    user_teams = await get_user_teams(db, user_id)
-    teams = []
-    
-    for team_id in user_teams:
-        team_name = await get_teams_name(db, team_id)
-        teams.append({
-            "team_id": team_id,
-            "team_name": team_name
-        })
-    
-    return {"teams": teams}
