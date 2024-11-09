@@ -3,9 +3,10 @@ from typing import Dict
 from crud.db import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import timedelta
-from crud.users import user_registration, check_user_exists, get_user_by_username, create_team, assing_team
+from crud.users import user_registration, check_user_exists, get_user_by_username, assing_team
 from utils.register_utils import hash_password, verify_password
 from logs.handle_logger import logger
+from crud.team import create_team
 from services.haandle_token import create_access_token, create_refresh_token, create_new_access_token
 from schemas.login_schemas import UserLogin, UserCreate, Token
 
@@ -30,7 +31,8 @@ async def register_users(user: UserCreate,
     user_id = await user_registration(db, user.username, user.email, password_hash,
                             user.first_name, user.last_name)
     # Create team
-    team_id = await create_team(db, user_id)
+    team_name = 'Individual_' + user_id
+    team_id = await create_team(db, team_name)
 
     # Assign the team for the user
     await assing_team(db, user_id, team_id)

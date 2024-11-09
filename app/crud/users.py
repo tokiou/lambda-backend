@@ -60,23 +60,6 @@ async def get_user_by_username(db, username: str):
     return user
 
 
-async def create_team(
-        db,
-        user_id: str,
-) -> str:
-    try:
-        team = Team(
-            name="Individual_" + user_id
-        )
-
-        await save_entity(db, team)
-        return team.id
-    except SQLAlchemyError as sqlex:
-        raise HTTPException(status_code=400, detail=str(sqlex))
-    except Exception as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
-
-
 async def assing_team(
         db,
         user_id: str,

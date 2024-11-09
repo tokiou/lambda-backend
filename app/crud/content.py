@@ -63,6 +63,15 @@ async def get_user_teams(db, user_id: str):
     teams = result.scalars().all()
     return teams
 
+
+async def get_user_teams_owner(db, user_id: str):
+    query = select(UserTeamRole.team_id).where(UserTeamRole.user_id == user_id, UserTeamRole.role == 'owner')
+    result = await db.execute(query)
+
+    teams = result.scalars().all()
+    return teams
+
+
 async def get_teams_name(db, team_ids) -> list:
     if not team_ids:
         return []
