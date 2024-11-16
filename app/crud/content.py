@@ -4,10 +4,10 @@ from sqlalchemy import delete, update
 from fastapi import HTTPException
 from typing import Optional
 from uuid import UUID
-from models.content_models import Idea
+from models.content_models import Idea, Project
 from models.teams_models import Team
 from sqlalchemy.future import select
-from schemas.content_schemas import UpdateIdea
+from schemas.content_schemas import UpdateIdea, ProjectOptional
 # flake8: noqa
 
 async def save_entity(db, entity) -> None:
@@ -140,4 +140,88 @@ async def update_team_idea(db, idea_id: str, update_data: UpdateIdea, user_id: s
     await db.execute(update_query)
     await db.commit()
 
+
+async def create_project(
+    db,
+    name: str,
+    description: str,
+    team_id: UUID,
+    user_id: str,
+) -> None:
+
+        user_teams = await get_user_teams(db, user_id)
+        uuid_team_id = UUID(team_id)
+        if uuid_team_id not in user_teams:
+            raise HTTPException(status_code=401, detail="You don't have permission to create a project here!")
+        if not description:
+            description = ""
+        try:
+            project = Project(
+                name=name,
+                description=description,
+                team_id=team_id,
+                status="active",
+            )
+
+            await save_entity(db, project)
+        except SQLAlchemyError as sqlex:
+            raise HTTPException(status_code=401, detail=str(sqlex))
+        except Exception as ex:
+            raise HTTPException(status_code=401, detail=str(ex))
+        
+
+async def delete_project(db, project_id: str, user_id: str):
+    query = select(Project).where(Project.id == project_id)
+    result = await db.execute(query)
+    project = result.scalar_one_or_none()
+
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    user_teams = await get_user_teams(db, user_id)
+
+
+    if project.team_id not in user_teams:
+        raise HTTPException(status_code=401, detail="You don't have permission to delete this project")
+
+    delete_query = delete(Project).where(Project.id == project_id)
+    await db.execute(delete_query)
+
+    await db.commit()
+
+
+async def update_project(db, project_id: str, update_data: ProjectOptional, user_id: str):
+    query = select(Project).where(Project.id == project_id)
+    result = await db.execute(query)
+    project = result.scalar_one_or_none()
+
+    if project is None:
+        raise HTTPException(status_code=403, detail="Idea not found")
     
+    user_teams = await get_user_teams(db, user_id)
+
+
+    if project.team_id not in user_teams:
+        raise HTTPException(status_code=401, detail="You don't have permission to update this idea")
+
+    update_data_dict = update_data.dict(exclude_unset=True)
+
+    update_query = (
+        update(Project)
+        .where(Project.id == project_id)
+        .values(**update_data_dict)
+    )
+
+    await db.execute(update_query)
+    await db.commit()
+
+
+async def get_team_projects(db, team_id: str, user_id: str):
+    query = select(Project).filter(Project.team_id == team_id, Project.status == "active")
+    result = await db.execute(query)
+    projects = result.scalars().all()
+    user_teams = await get_user_teams(db, user_id)
+    uuid_team_id = UUID(team_id)
+    if uuid_team_id not in user_teams:
+        raise HTTPException(status_code=401, detail="You don't have permission get this projects.")
+    return projects

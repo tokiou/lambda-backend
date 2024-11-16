@@ -4,7 +4,10 @@ from fastapi import HTTPException
 from sqlalchemy.future import select
 from logs.handle_logger import logger
 from models.teams_models import Team
-from models.users_models import UserTeamRole
+from models.users_models import UserTeamRole, Invitation
+from crud.content import get_user_teams
+from uuid import UUID
+from datetime import datetime
 # flake8: noqa
 
 
@@ -73,6 +76,69 @@ async def assing_team(
         )
 
         await save_entity(db, userteamrole)
+    except SQLAlchemyError as sqlex:
+        raise HTTPException(status_code=400, detail=str(sqlex))
+    except Exception as ex:
+        raise HTTPException(status_code=400, detail=str(ex))
+    
+
+async def register_invitation(
+        db,
+        sender_id: str,
+        recipient_id: str,
+        team_id: str
+) -> None:
+    user_teams = await get_user_teams(db, sender_id)
+    uuid_team_id = UUID(team_id)
+    if uuid_team_id not in user_teams:
+        raise HTTPException(status_code=401, detail="You don't have permission get this team.")
+    try:
+        status = "pendiente"
+        invitation = Invitation(
+            sender_id=sender_id,
+            recipient_id=recipient_id,
+            team_id=team_id,
+            status=status
+        )
+
+        await save_entity(db, invitation)
+    except SQLAlchemyError as sqlex:
+        raise HTTPException(status_code=400, detail=str(sqlex))
+    except Exception as ex:
+        raise HTTPException(status_code=400, detail=str(ex))
+
+
+async def update_invitation_status(
+    db, 
+    user_id: str,
+    invitation_id: str, 
+    status: str
+) -> None:
+    if status not in ["aceptado", "declinado"]:
+        raise HTTPException(status_code=400, detail="Invalid status value.")
+    
+    uuid_invitation_id = UUID(invitation_id)
+
+    try:
+        # Buscar la invitación
+        result = await db.execute(
+            select(Invitation).where(Invitation.id == uuid_invitation_id)
+        )
+        invitation = result.scalar_one_or_none()
+        
+        if not invitation:
+            raise HTTPException(status_code=404, detail="Invitation not found.")
+        
+        # Actualizar estado y fechas
+        invitation.status = status
+        if status == "aceptado":
+            invitation.accepted_at = datetime.utcnow()
+        elif status == "declinado":
+            invitation.rejected_at = datetime.utcnow()
+        
+        # Guardar cambios
+        await db.commit()
+
     except SQLAlchemyError as sqlex:
         raise HTTPException(status_code=400, detail=str(sqlex))
     except Exception as ex:

@@ -11,8 +11,20 @@ class Ideas(BaseModel):
 
 
 class UpdateIdea(BaseModel):
-    idea: Optional[str] = None
+    idea: str
     title: Optional[str] = None
     priority: Optional[int] = None
     team_id: Optional[str] = None
     status: Optional[str] = None
+
+
+class Projects(BaseModel):
+    name: str
+    description: Optional[str] = None
+    team_id: str
+
+
+class ProjectOptional(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    team_id: Optional[str] = None

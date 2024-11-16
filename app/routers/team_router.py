@@ -38,7 +38,7 @@ async def create_teams(
     db: AsyncSession = Depends(get_session)
 ) -> Dict:
     if not team.team_name:
-        raise HTTPException(status_code=401, detail='Not team_id')
+        raise HTTPException(status_code=401, detail='Not team name')
     team_id = await create_team(db, team.team_name)
     await assing_userteam_role(db, user_id, team_id, 'owner')
     return {"message": "Team Created"}

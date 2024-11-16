@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers import ai_router, users_router, content_router, team_router
+from routers import ai_router, users_router, content_router, team_router, project_router, invitations_router
 from logs.handle_logger import logger
 
 
@@ -8,6 +8,8 @@ def include_router(app) -> None:
     app.include_router(users_router.user_router)
     app.include_router(content_router.content_router)
     app.include_router(team_router.team_router)
+    app.include_router(project_router.project_router)
+    app.include_router(invitations_router.invitations_router)
 
 
 def init_app() -> FastAPI:
